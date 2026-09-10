@@ -4,19 +4,17 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { FlickeringGrid } from "../components/FlickeringGrid";
 import { Arrow, CountUp, Eyebrow, Icon, Reveal } from "../components/ui";
 
+/* The product's three roles — each one opens a different suite. */
 const ROLES = [
-  "Payment integrity",
-  "Network / provider contracting",
-  "Claims operations",
-  "Compliance & regulatory",
-  "Finance / actuarial",
-  "Engineering & data",
+  "Payor — Payor Intelligence suite",
+  "Provider — Provider Revenue suite",
+  "Arbiter — certified IDR entity",
 ];
 
 const STEPS = [
-  { n: "01", t: "Create your workspace", s: "One account per payor. Invite the rest of the team once you are in." },
+  { n: "01", t: "Pick your suite", s: "Payor Intelligence, Provider Revenue, or the Arbiter Workspace. Your role decides which of the thirty-three modules you land in." },
   { n: "02", t: "Connect a claims feed", s: "837s, remits, and your contracted rate table — SFTP, S3, or a direct X12 drop." },
-  { n: "03", t: "Get your first QPA read", s: "Qualifying payment amounts, notice-and-consent flags, and modeled IDR exposure, usually within two business days." },
+  { n: "03", t: "Get your first QPA read", s: "Qualifying payment amounts, eligibility gates, and IDR likelihood scoring, usually within two business days." },
 ];
 
 const REQUIRED = ["firstName", "lastName", "email", "org", "password"];
@@ -419,7 +417,7 @@ export default function Signup() {
                       </Field>
                       <Strength value={values.password} />
                     </div>,
-                    <Field key="role" label="Team" hint="Optional" valid={Boolean(values.role)}>
+                    <Field key="role" label="Role" hint="Optional" valid={Boolean(values.role)}>
                       <Select name="role" value={values.role} onChange={set("role")} options={ROLES} />
                     </Field>,
                   ].map((el, i) => (

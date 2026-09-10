@@ -31,11 +31,11 @@ const SOURCES = [
 ];
 
 export const FEED = [
-  { icon: <Icon.shield size={18} />, title: "Balance-bill risk blocked", time: "2m", sub: "OON anesthesia · Facility ID 4471" },
+  { icon: <Icon.shield size={18} />, title: "Claim screened", time: "2m", sub: "NSA protected · OON emergency" },
   { icon: <Icon.calc size={18} />, title: "QPA computed", time: "now", sub: "$1,284 median · 42 qualifying rates" },
-  { icon: <Icon.handshake size={18} />, title: "Open negotiation opened", time: "6m", sub: "Day 1 of 30 · Northline Surgical" },
-  { icon: <Icon.gavel size={18} />, title: "IDR offer submitted", time: "11m", sub: "Case 24-NSA-8812 · certified IDRE" },
-  { icon: <Icon.file size={18} />, title: "Audit packet sealed", time: "18m", sub: "QPA methodology · 6-yr retention" },
+  { icon: <Icon.chart size={18} />, title: "IDR likelihood scored", time: "6m", sub: "68% dispute probability" },
+  { icon: <Icon.handshake size={18} />, title: "Open negotiation opened", time: "11m", sub: "Day 1 of 30 · Northline Surgical" },
+  { icon: <Icon.file size={18} />, title: "Evidence packet sealed", time: "18m", sub: "24-NSA-8812 · 14 documents" },
 ];
 
 const SLOTS = 3;
@@ -223,8 +223,8 @@ export default function HeroStage() {
           <Source key={s.label} {...s} delay={0.15 + i * 0.06} />
         ))}
 
-        <AgentTag label="QPA agent" y={54} />
-        <AgentTag label="Negotiation agent" y={416} />
+        <AgentTag label="QPA Engine" y={54} />
+        <AgentTag label="IDR Defense" y={416} />
 
         {slots.map((feedIndex, i) => (
           <Slot key={i} index={i} feedIndex={feedIndex} />

@@ -29,9 +29,9 @@ export function Wordmark({ className = "" }) {
 }
 
 const LINKS = [
+  { label: "Suites", href: "/#suites" },
   { label: "Platform", href: "/#platform" },
   { label: "How it works", href: "/#how" },
-  { label: "Outcomes", href: "/#outcomes" },
   { label: "FAQ", href: "/#faq" },
 ];
 
@@ -141,11 +141,17 @@ export function Nav() {
 
 const FOOT = [
   {
-    title: "Platform",
-    items: ["QPA engine", "Negotiation workspace", "IDR case tracker", "Exposure modeling", "Reporting"],
+    title: "Payor Intelligence",
+    items: ["Claim Screener", "QPA Engine", "IDR Likelihood", "FWA / SIU", "Network Adequacy", "Compliance Audit"],
   },
-  { title: "Compliance", items: ["No Surprises Act", "Notice & consent", "Audit trail", "Data residency", "Security"] },
-  { title: "Company", items: ["About", "Careers", "Contact", "Privacy", "Terms"] },
+  {
+    title: "Provider Revenue",
+    items: ["Eligibility Advisor", "QPA Lookup", "IDR Offer Optimizer", "Smart Batching", "Evidence Builder", "Revenue at Risk"],
+  },
+  {
+    title: "Arbiter Workspace",
+    items: ["Disputes", "Offers", "QPA Benchmark", "Evidence", "Decision Issued"],
+  },
 ];
 
 export function Footer() {
@@ -157,7 +163,8 @@ export function Footer() {
         <div>
           <Wordmark />
           <p className="mt-4 max-w-[34ch] text-ui text-white/45" style={{ textWrap: "pretty" }}>
-            Compliance and dispute infrastructure for payors operating under the No Surprises Act.
+            The unified platform for No Surprises Act compliance, claim screening and provider
+            network intelligence.
           </p>
           <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/[0.04] px-3 py-1.5 text-caption text-white/50 ring-1 ring-white/[0.07] ring-inset">
             <Icon.lock size={14} />

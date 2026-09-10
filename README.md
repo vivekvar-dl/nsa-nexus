@@ -5,6 +5,12 @@ dispute-management platform. React + Vite + Tailwind v4 + Motion.
 
 Portfolio project — the sign-up form validates client-side and fakes the POST.
 
+Content is drawn from the real NSA Nexus application: three suites (Payor
+Intelligence, Provider Revenue, Arbiter Workspace), thirty-three modules, and
+the actual domain vocabulary — QPA base rate and cumulative factor, the IDR
+eligibility gate, the 30-day open-negotiation clock and its expiry states, and
+the compliance audit log.
+
 ```bash
 npm install
 npm run dev
