@@ -124,6 +124,7 @@ export default function Login() {
   const [state, setState] = useState("idle"); // idle | sending | done
   const [openDemo, setOpenDemo] = useState(false);
   const [matched, setMatched] = useState(null);
+  const [showAbout, setShowAbout] = useState(false);
 
   const emailOk = validEmail(values.email);
   const pwOk = values.password.length > 0;
@@ -280,9 +281,19 @@ export default function Login() {
                   transition={{ duration: 0.22, ease: [0.4, 0, 1, 1] }}
                   className="relative flex flex-col gap-5"
                 >
-                  <div>
-                    <h2 className="text-h3">Welcome back</h2>
-                    <p className="mt-2 text-ui text-white/45">Sign in to your NSA Nexus account.</p>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h2 className="text-h3">Welcome back</h2>
+                      <p className="mt-2 text-ui text-white/45">Sign in to your NSA Nexus account.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAbout(true)}
+                      className="mt-1 flex shrink-0 items-center gap-1.5 whitespace-nowrap text-caption text-white/40 transition-colors duration-200 hover:text-ember-100"
+                    >
+                      What&rsquo;s NSA Nexus?
+                      <Icon.chevron size={13} className="-rotate-90" />
+                    </button>
                   </div>
 
                   <AnimatePresence initial={false}>
@@ -479,9 +490,175 @@ export default function Login() {
                 </motion.form>
               )}
             </AnimatePresence>
+
+            <AboutOverlay open={showAbout} onClose={() => setShowAbout(false)} still={still} />
           </div>
         </Reveal>
       </div>
     </main>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   A curved, ember-gradient panel that wipes down over the card, the same
+   motion language as the classic split sign-in/sign-up panel transition —
+   adapted here as a reveal for "what is NSA Nexus" since this product has
+   no self-serve sign-up to toggle to. The wavy leading edge is a single
+   cubic-bezier SVG path whose control points move together; Motion
+   interpolates the numbers inside the `d` string directly, so the sweep
+   and the wave happen as one continuous motion instead of a straight wipe.
+--------------------------------------------------------------------------- */
+
+/* t: 0 = collapsed at the bottom edge (hidden), 1 = the crest has travelled
+   clear of the top, so the settled panel is flat and the wave stays purely a
+   transition device rather than an edge clipped by the card radius. */
+function waveD(t) {
+  const y0 = 100 - t * 114;
+  const y1 = 100 - t * 124;
+  const y2 = 100 - t * 108;
+  const y3 = 100 - t * 116;
+  return `M 0 ${y0} C 33 ${y1} 66 ${y2} 100 ${y3} L 100 100 L 0 100 Z`;
+}
+
+function clipD(t) {
+  const y0 = 1 - t * 1.14;
+  const y1 = 1 - t * 1.24;
+  const y2 = 1 - t * 1.08;
+  const y3 = 1 - t * 1.16;
+  return `M 0 ${y0} C 0.33 ${y1} 0.66 ${y2} 1 ${y3} L 1 1 L 0 1 Z`;
+}
+
+function edgeD(t) {
+  const y0 = 100 - t * 114;
+  const y1 = 100 - t * 124;
+  const y2 = 100 - t * 108;
+  const y3 = 100 - t * 116;
+  return `M 0 ${y0} C 33 ${y1} 66 ${y2} 100 ${y3}`;
+}
+
+function AboutOverlay({ open, onClose, still }) {
+  return (
+    <div
+      className="absolute inset-0 z-20 overflow-hidden rounded-[20px]"
+      style={{ pointerEvents: open ? "auto" : "none" }}
+      aria-hidden={!open}
+    >
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full" aria-hidden="true">
+        <defs>
+          {/* Dark panel, not a colour wash — the wipe reads through the
+              glowing edge rather than through a bright fill. */}
+          <linearGradient id="aboutFill" x1="0" y1="0" x2="0.6" y2="1">
+            <stop offset="0%" stopColor="oklch(0.238 0 0)" />
+            <stop offset="100%" stopColor="oklch(0.168 0 0)" />
+          </linearGradient>
+          <linearGradient id="aboutEdge" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="var(--color-ember-600)" />
+            <stop offset="50%" stopColor="var(--color-ember-100)" />
+            <stop offset="100%" stopColor="var(--color-ember-600)" />
+          </linearGradient>
+          <filter id="aboutGlow" x="-20%" y="-400%" width="140%" height="900%">
+            <feGaussianBlur stdDeviation="1.4" />
+          </filter>
+          {/* Same wave, in 0–1 space, so the copy is revealed BY the panel
+              instead of floating over the form while it rises. */}
+          <clipPath id="aboutClip" clipPathUnits="objectBoundingBox">
+            <motion.path
+              initial={false}
+              animate={{ d: clipD(open ? 1 : 0) }}
+              transition={still ? { duration: 0 } : { duration: 0.6, ease: [0.65, 0, 0.35, 1] }}
+            />
+          </clipPath>
+        </defs>
+
+        <motion.path
+          fill="url(#aboutFill)"
+          initial={false}
+          animate={{ d: waveD(open ? 1 : 0) }}
+          transition={still ? { duration: 0 } : { duration: 0.6, ease: [0.65, 0, 0.35, 1] }}
+        />
+
+        {/* The leading edge, twice: a soft bloom and a crisp hairline. */}
+        <motion.path
+          fill="none"
+          stroke="url(#aboutEdge)"
+          strokeWidth="3"
+          vectorEffect="non-scaling-stroke"
+          filter="url(#aboutGlow)"
+          opacity="0.55"
+          initial={false}
+          animate={{ d: edgeD(open ? 1 : 0) }}
+          transition={still ? { duration: 0 } : { duration: 0.6, ease: [0.65, 0, 0.35, 1] }}
+        />
+        <motion.path
+          fill="none"
+          stroke="url(#aboutEdge)"
+          strokeWidth="1.25"
+          vectorEffect="non-scaling-stroke"
+          initial={false}
+          animate={{ d: edgeD(open ? 1 : 0) }}
+          transition={still ? { duration: 0 } : { duration: 0.6, ease: [0.65, 0, 0.35, 1] }}
+        />
+      </svg>
+
+      <motion.div
+        className="absolute inset-0 flex flex-col justify-center p-7 sm:p-9"
+        style={{ clipPath: "url(#aboutClip)" }}
+        initial={false}
+        animate={{ opacity: open ? 1 : 0 }}
+        transition={
+          still
+            ? { duration: 0 }
+            : { duration: 0.28, delay: open ? 0.18 : 0, ease: [0, 0, 0.2, 1] }
+        }
+      >
+        <div className="flex items-center gap-2.5">
+          <span
+            className="grid size-8 place-items-center rounded-full text-ember-300"
+            style={{ boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.12)" }}
+          >
+            <Icon.shield size={16} />
+          </span>
+          <span className="text-ui tracking-[-0.01em]">
+            NSA <span className="text-white/55">Nexus</span>
+          </span>
+        </div>
+
+        <p className="mt-6 max-w-[26ch] text-h3 leading-[1.1]" style={{ textWrap: "pretty" }}>
+          One record for every side of a <span className="ember">dispute</span>
+        </p>
+
+        <ul className="mt-7 flex flex-col gap-3">
+          {POINTS.map((t) => (
+            <li key={t} className="flex items-start gap-3">
+              <span className="mt-0.5 shrink-0 text-ember-300"><Icon.check size={15} /></span>
+              <span className="text-ui text-white/65" style={{ textWrap: "pretty" }}>{t}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-7 flex flex-wrap gap-1.5">
+          {["Payor Intelligence", "Provider Revenue", "Arbiter Workspace"].map((suite) => (
+            <span
+              key={suite}
+              className="rounded-md px-2 py-1 text-caption text-white/45"
+              style={{ boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.08)" }}
+            >
+              {suite}
+            </span>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          tabIndex={open ? 0 : -1}
+          onClick={onClose}
+          className="group mt-8 flex min-h-11 w-fit items-center gap-2 rounded-full px-4 text-ui text-white/60 transition-[scale,color,background-color] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/[0.05] hover:text-bone active:scale-[0.96]"
+          style={{ boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.12)" }}
+        >
+          <Icon.chevron size={14} className="rotate-90 transition-transform duration-200 group-hover:-translate-x-0.5" />
+          Back to sign in
+        </button>
+      </motion.div>
+    </div>
   );
 }

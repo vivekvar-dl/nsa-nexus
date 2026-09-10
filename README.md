@@ -57,7 +57,7 @@ Until then `"season Fallback"` carries the layout with metric overrides
 | `src/components/BorderBeam.jsx` | Magic UI border beam (MIT), ported to JS — tracer on the QPA card |
 | `src/components/Ripple.jsx` | Magic UI ripple (MIT), ported to JS — rings behind the closing CTA |
 | `src/components/DashboardPreview.jsx` | Payor dashboard section — KPIs, claim-mix donut, volume bars, live deadline countdowns |
-| `src/pages/Login.jsx` | Sign-in page |
+| `src/pages/Login.jsx` | Sign-in page, incl. the curved-wave "What's NSA Nexus?" reveal |
 
 Sign-in fakes the POST — see the `ponytail:` comment in `src/pages/Login.jsx`
 for where `POST /v1/auth/login` goes.
