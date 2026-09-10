@@ -32,10 +32,10 @@ const SOURCES = [
 
 export const FEED = [
   { icon: <Icon.shield size={18} />, title: "Claim screened", time: "2m", sub: "NSA protected · OON emergency" },
-  { icon: <Icon.calc size={18} />, title: "QPA computed", time: "now", sub: "$1,284 median · 42 qualifying rates" },
-  { icon: <Icon.chart size={18} />, title: "IDR likelihood scored", time: "6m", sub: "68% dispute probability" },
-  { icon: <Icon.handshake size={18} />, title: "Open negotiation opened", time: "11m", sub: "Day 1 of 30 · Northline Surgical" },
-  { icon: <Icon.file size={18} />, title: "Evidence packet sealed", time: "18m", sub: "24-NSA-8812 · 14 documents" },
+  { icon: <Icon.calc size={18} />, title: "QPA computed", time: "now", sub: "Median contracted rate · methodology attached" },
+  { icon: <Icon.chart size={18} />, title: "IDR likelihood scored", time: "6m", sub: "Eligibility gate passed" },
+  { icon: <Icon.handshake size={18} />, title: "Open negotiation opened", time: "11m", sub: "Northline Surgical · thread started" },
+  { icon: <Icon.file size={18} />, title: "Evidence packet sealed", time: "18m", sub: "Attached to the case record" },
 ];
 
 const SLOTS = 3;

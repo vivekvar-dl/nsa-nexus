@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { FlickeringGrid } from "../components/FlickeringGrid";
-import { Arrow, CountUp, Eyebrow, Icon, Reveal } from "../components/ui";
+import { Arrow, Eyebrow, Icon, Reveal } from "../components/ui";
 
 /* The three demo users the NSA frontend ships with (authCredentials.js) —
    client-side only, and replaced once /v1/auth/login exists. */
@@ -195,18 +195,19 @@ export default function Login() {
             ))}
           </ul>
 
+          {/* Literal simulation defaults — payorService.js / FinancialForecast.jsx. */}
           <Reveal delay={0.5}>
             <div className="mt-12 rounded-2xl p-6" style={{ boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.07)" }}>
-              <p className="eyebrow">The window you are working against</p>
+              <p className="eyebrow">Default simulation parameters</p>
               <div className="mt-5 grid grid-cols-3 gap-4">
                 {[
-                  [30, "business days of open negotiation"],
-                  [4, "business days to initiate IDR"],
-                  [6, "years of records you must retain"],
-                ].map(([n, l]) => (
+                  ["85,000", "simulated claims"],
+                  ["35%", "IDR take rate"],
+                  ["90 days", "deadline scan window"],
+                ].map(([v, l]) => (
                   <div key={l}>
-                    <p className="text-h2 leading-none">
-                      <CountUp to={n} className="ember inline-block" />
+                    <p className="text-h2 leading-none tabular-nums">
+                      <span className="ember">{v}</span>
                     </p>
                     <p className="mt-2 text-caption text-white/40" style={{ textWrap: "pretty" }}>{l}</p>
                   </div>

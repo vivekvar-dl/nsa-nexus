@@ -4,7 +4,7 @@ import HeroStage, { FEED } from "../components/HeroStage";
 import { BorderBeam } from "../components/BorderBeam";
 import { Ripple } from "../components/Ripple";
 import DashboardPreview from "../components/DashboardPreview";
-import { Bar, Button, Card, CountUp, Eyebrow, Icon, Notif, Reveal } from "../components/ui";
+import { Button, Card, CountUp, Eyebrow, Icon, Notif, Reveal } from "../components/ui";
 
 /* -------------------------------------------------------------------------- */
 
@@ -267,45 +267,41 @@ function DashboardSection() {
 /* --- bento visuals -------------------------------------------------------- */
 
 function QpaVisual() {
+  /* Field labels are literal, from QPAEngine.jsx. The engine calls
+     POST /v1/qpa/lookup and POST /v1/qpa/member-liability — there is no
+     backend in this project, so every value renders "—" rather than an
+     invented dollar amount, exactly like the shipped app before a claim
+     is looked up. */
+  const fields = [
+    ["Base Rate 2019", "—"],
+    ["Cumulative Factor", "—"],
+    ["Deductible Left", "—"],
+    ["Coinsurance %", "—"],
+  ];
   return (
-    <div className="mt-7 flex flex-col gap-3">
-      <div className="flex items-baseline justify-between">
-        <span className="text-caption text-white/40">Median contracted rate · CPT 43239</span>
-        <span className="text-h3 tabular-nums">$1,284</span>
-      </div>
-      <div className="flex h-16 items-end gap-[3px]">
-        {[24, 38, 31, 52, 68, 84, 96, 88, 71, 55, 44, 36, 29, 22, 18].map((h, i) => (
-          <motion.span
-            key={i}
-            className="flex-1 rounded-[2px]"
-            style={{
-              background: i === 6 ? "linear-gradient(to top, var(--color-ember-600), var(--color-ember-300))" : "oklch(1 0 0 / 0.13)",
-            }}
-            initial={{ height: 2, opacity: 0 }}
-            whileInView={{ height: `${h}%`, opacity: 1 }}
-            viewport={{ once: true, margin: "-20% 0px" }}
-            transition={{ duration: 0.5, delay: i * 0.03, ease: [0, 0, 0.2, 1] }}
-          />
-        ))}
-      </div>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2 border-t border-white/[0.07] pt-4 sm:grid-cols-4">
-        {[
-          ["Base rate 2019", "$1,102"],
-          ["Cumulative factor", "1.165"],
-          ["Deductible left", "$340"],
-          ["Coinsurance", "20%"],
-        ].map(([k, v]) => (
-          <div key={k}>
-            <p className="text-caption text-white/35">{k}</p>
-            <p className="mt-1 text-ui tabular-nums">{v}</p>
+    <div className="mt-7 flex flex-col gap-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {fields.map(([label, v]) => (
+          <div key={label} className="rounded-lg p-3" style={{ boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.07)" }}>
+            <p className="truncate text-caption text-white/35">{label}</p>
+            <p className="mt-1.5 text-ui tabular-nums text-white/25">{v}</p>
           </div>
         ))}
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-4">
+        <span className="text-caption text-white/40">QPA Amount ($) · Member Liability</span>
+        <span className="flex items-center gap-2 text-caption text-white/30">
+          <Icon.clock size={13} /> Regulatory basis attached on lookup
+        </span>
       </div>
     </div>
   );
 }
 
-/* The real eligibility gate the IDR Likelihood module runs. */
+/* The real eligibility gate the IDR Likelihood module runs — checklist
+   copy is literal, from IDRLikelihood.jsx. Pass/fail here illustrates the
+   mechanism only; the module's own dispute-probability score is an API
+   output this project has no backend for, so it renders "—". */
 function EligibilityVisual() {
   const checks = [
     ["Service after Jan 1, 2022", true],
@@ -333,20 +329,23 @@ function EligibilityVisual() {
         </motion.div>
       ))}
       <div className="mt-2 flex items-baseline justify-between border-t border-white/[0.07] pt-4">
-        <span className="text-caption text-white/40">IDR dispute probability</span>
-        <span className="text-h4 tabular-nums"><CountUp to={68} format={(n) => `${n}%`} /></span>
+        <span className="text-caption text-white/40">IDR Dispute Probability</span>
+        <span className="text-h4 text-white/25">—</span>
       </div>
     </div>
   );
 }
 
-/* draft → send → counter → accept, on the 30-day clock. */
+/* Status values (InitialOffer, CounterOffer) are literal, from
+   useNegotiation.js. No day counts are shown: the open-negotiation window is real NSA
+   regulation, but no day-count field appears anywhere in the frontend
+   source, so none is asserted here. */
 function NegotiationVisual() {
   const steps = [
-    { label: "Offer drafted", day: "Day 1", done: true },
-    { label: "Offer sent", day: "Day 3", done: true },
-    { label: "Counter received", day: "Day 17", done: true },
-    { label: "Accept or escalate", day: "Day 30", done: false },
+    { label: "Offer drafted", status: "InitialOffer", done: true },
+    { label: "Offer sent", status: "InitialOffer", done: true },
+    { label: "Counter received", status: "CounterOffer", done: true },
+    { label: "Accept or escalate", status: "Pending", done: false },
   ];
   return (
     <div className="mt-7 flex flex-col gap-3.5">
@@ -369,22 +368,36 @@ function NegotiationVisual() {
             {s.done ? <Icon.check size={13} /> : <span className="size-1.5 rounded-full bg-white/40" />}
           </span>
           <span className={`flex-1 text-ui ${s.done ? "text-bone" : "text-white/45"}`}>{s.label}</span>
-          <span className="text-caption tabular-nums text-white/35">{s.day}</span>
+          <span className="text-caption text-white/35">{s.status}</span>
         </motion.div>
       ))}
-      <p className="flex items-center gap-2 pt-1 text-caption text-ember-300">
-        <Icon.clock size={14} /> Expiring soon · 13 days left
+      <p className="flex items-center gap-2 pt-1 text-caption text-white/30">
+        <Icon.clock size={14} /> Deadline warnings raised before a right expires
       </p>
     </div>
   );
 }
 
+/* Labels are literal, from ComplianceAudit.jsx. Counts and the health score
+   are API output with no backend in this project, so each renders "—". */
 function AuditVisual() {
+  const rows = ["Total Audit Events", "PHI Access Events", "IDR Right Lost"];
   return (
-    <div className="mt-7 flex flex-col gap-3">
-      <Bar label="Audit events" value="18,204" pct={82} tone="ember" delay={0} />
-      <Bar label="PHI access" value="2,431" pct={44} delay={0.1} />
-      <Bar label="IDR right lost" value="3" pct={4} delay={0.2} />
+    <div className="mt-7 flex flex-col gap-2">
+      {rows.map((label, i) => (
+        <motion.div
+          key={label}
+          className="flex items-center justify-between rounded-xl px-3 py-2.5"
+          style={{ boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.06)" }}
+          initial={{ opacity: 0, y: 6 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-20% 0px" }}
+          transition={{ duration: 0.4, delay: i * 0.09, ease: [0, 0, 0.2, 1] }}
+        >
+          <span className="text-ui text-white/70">{label}</span>
+          <span className="tabular-nums text-white/25">—</span>
+        </motion.div>
+      ))}
       <p className="pt-1 text-caption text-white/35">
         Compliance health score recomputed on every write to the audit log
       </p>
@@ -409,7 +422,7 @@ const BENTO = [
   {
     icon: <Icon.handshake />,
     title: "Open Negotiation",
-    body: "Draft, send, counter and accept in one thread, with the 30-day clock enforced and expiry warnings raised before the right is lost.",
+    body: "Draft, send, counter and accept in one thread, with the open-negotiation clock enforced and expiry warnings raised before the right is lost.",
     visual: <NegotiationVisual />,
   },
   {
@@ -482,7 +495,7 @@ const STEPS = [
   {
     n: "03",
     title: "Negotiate, then escalate on the clock",
-    body: "Dispute initiation, the 30-day open negotiation thread, smart batching of similar disputes, evidence assembly and IDR submission are tracked as one case — with deadline warnings raised before a right expires.",
+    body: "Dispute initiation, the open negotiation thread, smart batching of similar disputes, evidence assembly and IDR submission are tracked as one case — with deadline warnings raised before a right expires.",
     tag: "RESOLVE",
   },
 ];
@@ -572,10 +585,21 @@ function How() {
 
 /* -------------------------------------------------------------------------- */
 
+/* Literal simulation/deadline defaults — payorService.js, FinancialForecast.jsx,
+   deadlineTrackerService.js. Not asserted results, just the real config. */
 const OUTCOMES = [
-  { k: "Deadline misses", to: 0, format: (n) => n, s: "Every negotiation scanned for expiry, not just the one you opened" },
-  { k: "QPA defensibility", to: 100, format: (n) => `${n}%`, s: "Each amount ships with its base rate, factor and regulatory basis" },
-  { k: "Retention", to: 6, format: (n) => `${n} yrs`, s: "Audit events sealed at the moment of decision" },
+  { k: "Simulated claims", v: "85,000", s: "Default portfolio size for the financial liability simulation" },
+  { k: "IDR take rate", v: "35%", s: "Share of disputed claims modeled as escalating to IDR" },
+  { k: "Deadline window", v: "90 days", s: "How far ahead the payor dashboard scans for active deadlines" },
+];
+
+/* DeadlineContext.js — the three literal warning_type values a scanned
+   negotiation can carry, in the priority order the file itself documents
+   (EXPIRED > EXPIRING_SOON > INACTIVE_PARTY). */
+const WARNING_TYPES = [
+  { k: "INACTIVE_PARTY", s: "The current viewer's side has gone quiet on an open negotiation" },
+  { k: "EXPIRING_SOON", s: "A negotiation or IDR window is closing" },
+  { k: "EXPIRED", s: "The right has lapsed — this warning always resurfaces, by design" },
 ];
 
 function Outcomes() {
@@ -595,8 +619,8 @@ function Outcomes() {
             <Reveal key={o.k} delay={i * 0.08}>
               <Card className="h-full p-7">
                 <p className="eyebrow">{o.k}</p>
-                <p className="mt-4 text-[2.75rem] leading-none">
-                  <CountUp to={o.to} format={o.format} className="ember inline-block" />
+                <p className="mt-4 text-[2.75rem] leading-none tabular-nums">
+                  <span className="ember">{o.v}</span>
                 </p>
                 <p className="mt-3 text-ui text-white/45" style={{ textWrap: "pretty" }}>{o.s}</p>
               </Card>
@@ -608,15 +632,31 @@ function Outcomes() {
           <Card className="mt-4 p-7 sm:p-9">
             <div className="grid gap-9 md:grid-cols-2 md:gap-14">
               <div>
-                <p className="eyebrow">Where NSA cases are lost</p>
+                <p className="eyebrow">How a negotiation gets flagged</p>
                 <div className="mt-6 flex flex-col gap-3">
-                  <Bar label="Missed windows" value="41%" pct={41} tone="ember" />
-                  <Bar label="Weak QPA record" value="28%" pct={28} tone="ember" delay={0.08} />
-                  <Bar label="Batching errors" value="19%" pct={19} delay={0.16} />
-                  <Bar label="Notice defects" value="12%" pct={12} delay={0.24} />
+                  {WARNING_TYPES.map((w, i) => (
+                    <motion.div
+                      key={w.k}
+                      className="flex items-start gap-3 rounded-xl px-3 py-3"
+                      style={{ boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.06)" }}
+                      initial={{ opacity: 0, y: 6 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-15% 0px" }}
+                      transition={{ duration: 0.4, delay: i * 0.08, ease: [0, 0, 0.2, 1] }}
+                    >
+                      <span
+                        className="mt-1 size-1.5 shrink-0 rounded-full"
+                        style={{ background: w.k === "EXPIRED" ? "var(--color-ember-600)" : w.k === "EXPIRING_SOON" ? "var(--color-ember-300)" : "oklch(1 0 0 / 0.35)" }}
+                      />
+                      <div className="min-w-0">
+                        <p className="font-mono text-caption text-white/70">{w.k}</p>
+                        <p className="mt-0.5 text-caption text-white/40" style={{ textWrap: "pretty" }}>{w.s}</p>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
                 <p className="mt-5 text-caption text-white/30">
-                  Illustrative distribution across payor dispute programs.
+                  Priority order on conflict: EXPIRED &gt; EXPIRING_SOON &gt; INACTIVE_PARTY.
                 </p>
               </div>
               <div className="flex flex-col justify-center gap-5 md:border-l md:border-white/[0.07] md:pl-14">

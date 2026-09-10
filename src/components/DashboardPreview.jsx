@@ -1,34 +1,48 @@
-import { useEffect, useRef, useState } from "react";
-import { motion, useInView, useReducedMotion } from "motion/react";
-import { CountUp, Icon } from "./ui";
+import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { Icon } from "./ui";
 
 /* ---------------------------------------------------------------------------
-   Every figure below comes from the NSA Nexus payor dashboard, not invented:
+   Every value below is literal, from the NSA Nexus frontend source — nothing
+   here is computed or assumed:
 
-   · KPI titles and trends      PayorDashboard.jsx  (design.md §2.4 KPI row)
-   · 85,000 claims · 35% IDR    payorService.js     financialSimulate defaults
-     take-rate · 175% of QPA
-   · Claim mix percentages      payorService.js     claim_mix
-   · 6-month volume curve       payorService.js     total/6 * (0.85 + i*0.03)
-   · Critical/Warning/Monitor   PayorDashboard.jsx  urgencyDot()
-
-   Dollar figures are that simulation carried through at the platform's own
-   $1,284 mean QPA: 85,000 × $1,284 = $109.1M liability, billed at 175%
-   = $191.0M, leaving $81.9M of overage, or $963 per claim.
+   · KPI titles & trends     PayorDashboard.jsx (design.md §2.4 KPI row) and
+                              payorService.js — trend: 4.2 / 3.1 / 5.8 / 7.2 /
+                              1.4 / 0 are hardcoded in the service, not derived
+   · Simulation defaults     payorService.js / FinancialForecast.jsx —
+                              total_claims 85000, idr_take_rate 0.35,
+                              log_normal_sigma 0.25, service_year 2025,
+                              fixed_growth_rate 0.03
+   · Claim mix %             FinancialForecast.jsx DEFAULT_MIX (sums to 100)
+   · Deadlines window        payorService.js / deadlineTrackerService.js —
+                              days_ahead default is 90
+   · Urgency bands           PayorDashboard.jsx urgencyDot()
+   · "—" fallback            FinancialForecast.jsx fmt(): every KPI is an
+                              output of POST /v1/financial/simulate. There is
+                              no backend in this project, so — like the app's
+                              own fmt() — every value the API would supply
+                              renders as "—" instead of an invented number.
 --------------------------------------------------------------------------- */
 
-const TOTAL_CLAIMS = 85000;
-const IDR_TAKE_RATE = 0.35;
-
-const KPIS = [
-  { title: "Total NSA Claims", to: 85000, format: (n) => n.toLocaleString(), trend: 4.2 },
-  { title: "QPA Plan Liability", to: 109.1, format: (n) => `$${n}M`, decimals: 1, trend: 3.1 },
-  { title: "OON Billed at 175%", to: 191.0, format: (n) => `$${n}M`, decimals: 1, trend: 5.8 },
-  { title: "Overage Above QPA", to: 81.9, format: (n) => `$${n}M`, decimals: 1, trend: 7.2 },
-  { title: "Mean Overage / Claim", to: 963, format: (n) => `$${n}`, trend: 1.4 },
-  { title: "IDR Escalations", to: TOTAL_CLAIMS * IDR_TAKE_RATE, format: (n) => n.toLocaleString(), trend: 0, note: "35% take-rate" },
+const INPUTS = [
+  { label: "Total claims", value: "85,000" },
+  { label: "IDR take rate", value: "0.35" },
+  { label: "Log-normal σ", value: "0.25" },
+  { label: "Service year", value: "2025" },
 ];
 
+/* payorService.js — trend values are typed literally in the file, the dollar
+   VALUES are not (they come from `sim?.summary` and are undefined here). */
+const KPIS = [
+  { title: "Total NSA Claims", trend: 4.2 },
+  { title: "QPA Plan Liability", trend: 3.1 },
+  { title: "OON Billed at 175%", trend: 5.8 },
+  { title: "Overage Above QPA", trend: 7.2 },
+  { title: "Mean Overage / Claim", trend: 1.4 },
+  { title: "IDR Escalations", trend: 0, note: "35% take-rate" },
+];
+
+/* FinancialForecast.jsx DEFAULT_MIX, in the file's own order. */
 const CLAIM_MIX = [
   { name: "Anesthesiology", value: 58 },
   { name: "Emergency Medicine", value: 9 },
@@ -36,41 +50,11 @@ const CLAIM_MIX = [
   { name: "Pathology", value: 6 },
   { name: "Radiology", value: 5 },
   { name: "Cardiology", value: 5 },
+  { name: "Air Ambulance", value: 2 },
   { name: "Neonatology", value: 4 },
   { name: "Internal Medicine", value: 3 },
-  { name: "Air Ambulance", value: 2 },
 ];
 
-/* payorService.js: claimsVolume = total/6 * (0.85 + i * 0.03) */
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-const VOLUME = MONTHS.map((name, i) => ({
-  name,
-  value: Math.round((TOTAL_CLAIMS / 6) * (0.85 + i * 0.03)),
-}));
-/* The real curve only spans ~15%, so bars drawn from zero read as a flat wall.
-   Cropping the baseline shows the actual month-on-month climb; the caption
-   still carries the absolute range. */
-const V_MIN = Math.min(...VOLUME.map((v) => v.value));
-const V_MAX = Math.max(...VOLUME.map((v) => v.value));
-const barHeight = (v) => 34 + ((v - V_MIN) / (V_MAX - V_MIN)) * 66;
-
-/* Offsets, not fixed dates, so the countdown stays honest whenever it runs. */
-const inDays = (n) => new Date(Date.now() + n * 86400000).toISOString();
-const DEADLINES = [
-  { id: "DSP-8F21A4", specialty: "Anesthesiology", neg: inDays(2), urgency: "Critical" },
-  { id: "DSP-3C77E0", specialty: "Emergency Medicine", neg: inDays(14), urgency: "Warning" },
-  { id: "DSP-B10D95", specialty: "Air Ambulance", neg: inDays(28), urgency: "Warning" },
-  { id: "DSP-5A4EC2", specialty: "Radiology", neg: inDays(61), urgency: "Monitor" },
-];
-
-const URGENCY = {
-  Critical: { dot: "var(--color-ember-600)", text: "oklch(0.741 0.122 64.7)" },
-  Warning: { dot: "var(--color-ember-300)", text: "oklch(0.862 0.065 69.8)" },
-  Monitor: { dot: "oklch(1 0 0 / 0.35)", text: "oklch(1 0 0 / 0.5)" },
-};
-
-/* Slice colours stay on the site's own ramp: the dominant specialty carries
-   the accent, everything else steps down in neutral. */
 const SLICE = [
   "url(#mixEmber)",
   "oklch(1 0 0 / 0.34)",
@@ -83,41 +67,9 @@ const SLICE = [
   "oklch(1 0 0 / 0.09)",
 ];
 
-/* --- live countdown, the same idea as the app's DeadlineCountdown --------- */
-
-function useCountdown(iso, enabled) {
-  const [left, setLeft] = useState(() => new Date(iso) - new Date());
-  useEffect(() => {
-    if (!enabled) return;
-    const t = setInterval(() => setLeft(new Date(iso) - new Date()), 1000);
-    return () => clearInterval(t);
-  }, [iso, enabled]);
-  const s = Math.max(0, Math.floor(left / 1000));
-  return {
-    d: Math.floor(s / 86400),
-    h: Math.floor((s % 86400) / 3600),
-    m: Math.floor((s % 3600) / 60),
-    s: s % 60,
-  };
-}
-
-function Countdown({ iso }) {
-  const still = useReducedMotion();
-  const { d, h, m, s } = useCountdown(iso, !still);
-  const pad = (n) => String(n).padStart(2, "0");
-  return (
-    <span className="tabular-nums">
-      {d}d {pad(h)}:{pad(m)}
-      {!still && <span className="text-white/40">:{pad(s)}</span>}
-    </span>
-  );
-}
-
-/* --- donut ---------------------------------------------------------------- */
+/* --- donut ------------------------------------------------------------- */
 
 function Donut() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-15% 0px" });
   const still = useReducedMotion();
   const [hover, setHover] = useState(0);
 
@@ -130,7 +82,7 @@ function Donut() {
   const active = CLAIM_MIX[hover];
 
   return (
-    <div ref={ref} className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-8">
+    <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-8">
       <div className="relative shrink-0">
         <svg viewBox="0 0 128 128" className="size-[152px]" aria-hidden="true">
           <defs>
@@ -150,7 +102,8 @@ function Donut() {
                 strokeWidth={hover === a.i ? 17 : 13}
                 strokeDashoffset={-a.offset}
                 initial={still ? false : { strokeDasharray: "0 100", opacity: 0 }}
-                animate={inView || still ? { strokeDasharray: `${a.value} ${100 - a.value}`, opacity: 1 } : undefined}
+                whileInView={{ strokeDasharray: `${a.value} ${100 - a.value}`, opacity: 1 }}
+                viewport={{ once: true, margin: "-15% 0px" }}
                 transition={{ duration: 0.6, delay: 0.1 + a.i * 0.07, ease: [0, 0, 0.2, 1] }}
                 onMouseEnter={() => setHover(a.i)}
                 className="cursor-default transition-[stroke-width] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
@@ -158,7 +111,6 @@ function Donut() {
             ))}
           </g>
         </svg>
-        {/* Centre reads whichever slice the pointer is on. */}
         <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
           <div>
             <p className="text-h4 leading-none tabular-nums">{active.value}%</p>
@@ -190,7 +142,7 @@ function Donut() {
   );
 }
 
-/* --- panels --------------------------------------------------------------- */
+/* --- panels -------------------------------------------------------------- */
 
 function Panel({ title, action, children, className = "" }) {
   return (
@@ -240,11 +192,11 @@ export default function DashboardPreview() {
       }}
     >
       {/* window chrome */}
-      <div className="flex items-center justify-between gap-4 border-b border-white/[0.07] pb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.07] pb-5">
         <div>
           <h3 className="text-h4">Payor Dashboard</h3>
           <p className="mt-1 text-caption text-white/35">
-            85,000 claims · 35% IDR take-rate · service year 2025
+            Simulation parameters — POST /v1/financial/simulate
           </p>
         </div>
         <button
@@ -261,8 +213,24 @@ export default function DashboardPreview() {
         </button>
       </div>
 
-      {/* KPI row — design.md §2.4 */}
-      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+      {/* Literal simulation inputs — nothing here is derived. */}
+      <div className="mt-5 flex flex-wrap gap-2">
+        {INPUTS.map((p) => (
+          <span
+            key={p.label}
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-caption"
+            style={{ boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.08)" }}
+          >
+            <span className="text-white/40">{p.label}</span>
+            <span className="tabular-nums text-bone">{p.value}</span>
+          </span>
+        ))}
+      </div>
+
+      {/* KPI row — design.md §2.4 titles + payorService.js trends. The values
+          are API output with no backend behind this project, so — same as
+          the shipped app's own fmt() helper — they render "—". */}
+      <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
         {KPIS.map((k, i) => (
           <motion.div
             key={k.title}
@@ -274,9 +242,7 @@ export default function DashboardPreview() {
             transition={{ duration: 0.3, delay: i * 0.06, ease: [0, 0, 0.2, 1] }}
           >
             <p className="truncate text-caption text-white/40" title={k.title}>{k.title}</p>
-            <p className="mt-2 text-h4 leading-none tabular-nums">
-              <CountUp to={k.to} decimals={k.decimals} format={k.format} />
-            </p>
+            <p className="mt-2 text-h4 leading-none text-white/25">—</p>
             <div className="mt-3">
               <Trend value={k.trend} note={k.note} />
             </div>
@@ -284,87 +250,36 @@ export default function DashboardPreview() {
         ))}
       </div>
 
-      {/* charts */}
-      <div className="mt-3 grid gap-3 lg:grid-cols-[1.25fr_1fr]">
+      {/* claim mix — literal DEFAULT_MIX */}
+      <div className="mt-3">
         <Panel title="Claim Mix by Specialty">
           <Donut />
         </Panel>
-
-        <Panel title="Claims Volume (6-Month)">
-          {/* Bars own their own fixed-height box, so a % height has a basis
-              that the month labels cannot eat into. */}
-          <div className="flex h-[118px] items-end gap-2.5">
-            {VOLUME.map((v, i) => (
-              <div key={v.name} className="group relative flex h-full flex-1 items-end justify-center">
-                <span className="pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 text-caption tabular-nums text-white/0 transition-colors duration-200 group-hover:text-white/60">
-                  {v.value.toLocaleString()}
-                </span>
-                <motion.div
-                  className="w-full max-w-[46px] rounded-[3px]"
-                  style={{
-                    background:
-                      i === VOLUME.length - 1
-                        ? "linear-gradient(to top, var(--color-ember-600), var(--color-ember-300))"
-                        : "oklch(1 0 0 / 0.13)",
-                  }}
-                  initial={still ? false : { height: "2%", opacity: 0 }}
-                  whileInView={{ height: `${barHeight(v.value)}%`, opacity: 1 }}
-                  viewport={{ once: true, margin: "-15% 0px" }}
-                  transition={{ duration: 0.55, delay: i * 0.06, ease: [0, 0, 0.2, 1] }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-2 flex gap-2.5">
-            {VOLUME.map((v) => (
-              <span key={v.name} className="flex-1 text-center text-caption text-white/35">{v.name}</span>
-            ))}
-          </div>
-          <p className="mt-4 text-caption text-white/30 tabular-nums">
-            {VOLUME[0].value.toLocaleString()} → {VOLUME.at(-1).value.toLocaleString()} claims / month
-          </p>
-        </Panel>
       </div>
 
-      {/* active deadlines */}
+      {/* active deadlines — real 90-day window, real urgency bands, and the
+          app's own literal empty-state copy since there is no live row data. */}
       <div className="mt-3">
         <Panel
           title="Active Deadlines (Next 90 Days)"
-          action={<span className="text-caption text-white/30">Negotiation window</span>}
+          action={
+            <div className="flex gap-3 text-caption text-white/30">
+              {["Critical", "Warning", "Monitor"].map((u) => (
+                <span key={u} className="flex items-center gap-1.5">
+                  <span
+                    className="size-1.5 rounded-full"
+                    style={{
+                      background:
+                        u === "Critical" ? "var(--color-ember-600)" : u === "Warning" ? "var(--color-ember-300)" : "oklch(1 0 0 / 0.35)",
+                    }}
+                  />
+                  {u}
+                </span>
+              ))}
+            </div>
+          }
         >
-          <ul className="flex flex-col">
-            {DEADLINES.map((d, i) => (
-              <motion.li
-                key={d.id}
-                className="flex items-center gap-3 border-b border-white/[0.06] py-2.5 last:border-0"
-                initial={still ? false : { opacity: 0, x: -6 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-12% 0px" }}
-                transition={{ duration: 0.35, delay: i * 0.07, ease: [0, 0, 0.2, 1] }}
-              >
-                <span className="relative flex size-2 shrink-0">
-                  {d.urgency === "Critical" && !still && (
-                    <span
-                      className="absolute inset-0 animate-ping rounded-full"
-                      style={{ background: URGENCY[d.urgency].dot }}
-                    />
-                  )}
-                  <span className="relative size-2 rounded-full" style={{ background: URGENCY[d.urgency].dot }} />
-                </span>
-                <span className="shrink-0 font-mono text-caption text-white/70">{d.id}</span>
-                <span className="min-w-0 flex-1 truncate text-caption text-white/45">{d.specialty}</span>
-                <span className="hidden shrink-0 text-caption text-white/35 sm:block">
-                  <Countdown iso={d.neg} />
-                </span>
-                <span
-                  className="shrink-0 rounded-full px-2 py-0.5 text-caption"
-                  style={{ color: URGENCY[d.urgency].text, backgroundColor: "oklch(1 0 0 / 0.05)" }}
-                >
-                  {d.urgency}
-                </span>
-              </motion.li>
-            ))}
-          </ul>
+          <p className="text-ui text-white/40">No upcoming deadlines.</p>
         </Panel>
       </div>
     </div>

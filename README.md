@@ -8,12 +8,22 @@ directory the NSA frontend ships with, until `POST /v1/auth/login` exists.
 
 Content is drawn from the real NSA Nexus application: three suites (Payor
 Intelligence, Provider Revenue, Arbiter Workspace), thirty-three modules, and
-the actual domain vocabulary. The dashboard section mirrors `PayorDashboard`
-and `payorService` exactly — the six design.md §2.4 KPIs with their trends,
-the `financialSimulate` defaults (85,000 claims, 35% IDR take-rate, service
-year 2025), the `claim_mix` percentages, the six-month volume formula
-`total / 6 * (0.85 + i * 0.03)`, and the Critical / Warning / Monitor
-urgency bands.
+the actual domain vocabulary — titles, field labels and status enums, not
+invented copy.
+
+No output number on this site is assumed. Every dollar figure, count and
+percentage the product would normally compute (QPA liability, OON billed,
+overage, dispute probability, audit counts, volume) comes from
+`POST /v1/financial/simulate`, `POST /v1/qpa/*` or `POST /v1/ai/idr-score` —
+none of which have a backend in this project, and none of which have a
+hard-coded example response anywhere in the reference source. So, exactly
+like the shipped app's own `fmt()` helper, every such value renders as `—`.
+The only numbers shown are literal *inputs* that exist as real defaults in
+the source: 85,000 simulated claims, a 0.35 IDR take rate, a 0.25
+log-normal σ, service year 2025, the nine-specialty `claim_mix` percentages,
+the 90-day deadline scan window, the six KPI trend values that are typed
+directly into `payorService.js`, and the `INACTIVE_PARTY` /
+`EXPIRING_SOON` / `EXPIRED` warning taxonomy from `DeadlineContext.js`.
 
 ```bash
 npm install
