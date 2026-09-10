@@ -108,7 +108,7 @@ export function Notif({ icon, title, time, sub, className = "", style }) {
 
 /* Counts to `to` the first time it scrolls into view. Digits are tabular so
    the box never twitches while the number climbs. */
-export function CountUp({ to, duration = 1.1, format = (n) => n, className = "" }) {
+export function CountUp({ to, duration = 1.1, decimals = 0, format = (n) => n, className = "" }) {
   const still = useReducedMotion();
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-15% 0px" });
@@ -118,13 +118,13 @@ export function CountUp({ to, duration = 1.1, format = (n) => n, className = "" 
     const controls = animate(0, to, {
       duration,
       ease: [0.16, 1, 0.3, 1],
-      onUpdate: (v) => setN(Math.round(v)),
+      onUpdate: (v) => setN(decimals ? Number(v.toFixed(decimals)) : Math.round(v)),
     });
     return () => controls.stop();
-  }, [inView, still, to, duration]);
+  }, [inView, still, to, duration, decimals]);
   return (
     <span ref={ref} className={`tabular-nums ${className}`}>
-      {format(n)}
+      {format(decimals ? n.toFixed(decimals) : n)}
     </span>
   );
 }
@@ -150,6 +150,9 @@ export const Icon = {
   check: (p) => <I {...p}><path d="m5 12.5 4.5 4.5L19 7" /></I>,
   lock: (p) => <I {...p}><rect x="4.5" y="10" width="15" height="10.5" rx="2.5" /><path d="M8 10V7.5a4 4 0 0 1 8 0V10" /></I>,
   chevron: (p) => <I {...p}><path d="m6 9 6 6 6-6" /></I>,
+  trend: (p) => <I {...p}><path d="m3 17 6-6 4 4 8-8" /><path d="M15 7h6v6" /></I>,
+  refresh: (p) => <I {...p}><path d="M21 12a9 9 0 1 1-2.6-6.4" /><path d="M21 4v5h-5" /></I>,
+  alert: (p) => <I {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5M12 16h.01" /></I>,
   eye: (p) => <I {...p}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="3" /></I>,
   eyeOff: (p) => <I {...p}><path d="M3 3l18 18M10.6 10.6a2.5 2.5 0 0 0 3.5 3.5M6.6 6.7C4 8.5 2.5 12 2.5 12s3.5 6.5 9.5 6.5c1.9 0 3.5-.5 4.9-1.3M9.9 5.8A9.8 9.8 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17.4 17.4 0 0 1-2.4 3.2" /></I>,
 };

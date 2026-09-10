@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScro
 import HeroStage, { FEED } from "../components/HeroStage";
 import { BorderBeam } from "../components/BorderBeam";
 import { Ripple } from "../components/Ripple";
+import DashboardPreview from "../components/DashboardPreview";
 import { Bar, Button, Card, CountUp, Eyebrow, Icon, Notif, Reveal } from "../components/ui";
 
 /* -------------------------------------------------------------------------- */
@@ -46,14 +47,14 @@ function Hero() {
 
         <Reveal delay={0.27}>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <Button to="/signup" arrow>Get started</Button>
-            <Button variant="ghost" href="#suites">Explore the suites</Button>
+            <Button to="/login" arrow>Sign in</Button>
+            <Button variant="ghost" href="#dashboard">See the dashboard</Button>
           </div>
         </Reveal>
 
         <Reveal delay={0.36}>
           <p className="mt-5 text-caption text-white/35">
-            Free to set up. Deploys against your existing claims stack.
+Accounts are provisioned by your organization&rsquo;s admin.
           </p>
         </Reveal>
       </motion.div>
@@ -240,6 +241,29 @@ function Suites() {
   );
 }
 
+/* --- dashboard ------------------------------------------------------------ */
+
+function DashboardSection() {
+  return (
+    <section className="relative border-y border-white/[0.06] bg-ink-deep">
+      <div className="lattice pointer-events-none absolute inset-0 opacity-50" />
+      <div className="relative mx-auto max-w-[76rem] px-5 py-24 sm:px-8 sm:py-32">
+        <SectionHead
+          id="dashboard"
+          eyebrow="Payor dashboard"
+          title="The whole book, on one screen"
+          body="Six KPIs over the financial simulation, claim mix by specialty, six months of volume, and every negotiation window inside ninety days — with the clock still running on each one."
+        />
+        <Reveal delay={0.16} y={16}>
+          <div className="mt-14">
+            <DashboardPreview />
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* --- bento visuals -------------------------------------------------------- */
 
 function QpaVisual() {
@@ -399,8 +423,7 @@ const BENTO = [
 
 function Platform() {
   return (
-    <section className="relative border-y border-white/[0.06] bg-ink-deep">
-      <div className="lattice pointer-events-none absolute inset-0 opacity-50" />
+    <section className="relative">
       <div className="relative mx-auto max-w-[76rem] px-5 py-24 sm:px-8 sm:py-32">
         <SectionHead
           id="platform"
@@ -734,13 +757,13 @@ function FinalCta() {
         </Reveal>
         <Reveal delay={0.09}>
           <p className="mx-auto mt-6 max-w-[52ch] text-lead text-white/50" style={{ textWrap: "pretty" }}>
-            Set up a workspace, connect a quarter of out-of-network claims, and see what the
-            platform would have caught.
+Sign in to your suite, or ask your administrator for access. Thirty-three
+            modules, one record, one clock.
           </p>
         </Reveal>
         <Reveal delay={0.18}>
           <div className="mt-9 flex justify-center">
-            <Button to="/signup" arrow>Get started</Button>
+            <Button to="/login" arrow>Sign in</Button>
           </div>
         </Reveal>
       </div>
@@ -754,6 +777,7 @@ export default function Landing() {
       <Hero />
       <Modules />
       <Suites />
+      <DashboardSection />
       <Platform />
       <How />
       <Outcomes />

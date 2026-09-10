@@ -30,8 +30,8 @@ export function Wordmark({ className = "" }) {
 
 const LINKS = [
   { label: "Suites", href: "/#suites" },
+  { label: "Dashboard", href: "/#dashboard" },
   { label: "Platform", href: "/#platform" },
-  { label: "How it works", href: "/#how" },
   { label: "FAQ", href: "/#faq" },
 ];
 
@@ -76,14 +76,8 @@ export function Nav() {
         </ul>
 
         <div className="flex items-center gap-2">
-          <Link
-            to="/signup"
-            className="hidden min-h-10 items-center rounded-lg px-3 text-ui text-white/60 transition-colors duration-200 hover:text-bone sm:inline-flex"
-          >
+          <Button to="/login" className="!min-h-10 !px-4 text-caption sm:!px-5 sm:text-ui">
             Sign in
-          </Link>
-          <Button to="/signup" className="!min-h-10 !px-4 text-caption sm:!px-5 sm:text-ui">
-            Get started
           </Button>
           <button
             onClick={() => setOpen((v) => !v)}
@@ -124,7 +118,7 @@ export function Nav() {
             className="overflow-hidden border-t border-white/[0.07] bg-ink/95 backdrop-blur-xl md:hidden"
           >
             <ul className="mx-auto max-w-[76rem] px-5 py-3 sm:px-8">
-              {LINKS.concat({ label: "Sign in", href: "/signup" }).map((l) => (
+              {LINKS.concat({ label: "How it works", href: "/#how" }).map((l) => (
                 <li key={l.label}>
                   <a href={l.href} className="flex min-h-11 items-center text-lead text-white/70">
                     {l.label}
